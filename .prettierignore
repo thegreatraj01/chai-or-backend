@@ -1,0 +1,12 @@
+# Ignore all files in the node_modules directory
+node_modules/
+
+# Ignore specific files
+dist/
+build/
+
+# Ignore all files with a .md extension
+*.md
+*.evv
+.env
+.env.*
