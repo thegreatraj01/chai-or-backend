@@ -8,12 +8,14 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
+const folderName = "ChaiOrCode";
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
-        const response = cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto",
+            folder: folderName
         })
         // file has been uploaded sucessfully 
         console.log("file has uploaded successfully on cloudinary", response);
@@ -23,3 +25,16 @@ const uploadOnCloudinary = async (localFilePath) => {
         return null;
     }
 }
+
+
+export { uploadOnCloudinary };
+
+
+// cloudinary.uploader.upload(filePath, { folder: folderName }, (error, result) => {
+//     if (error) {
+//         console.error(error);
+//     } else {
+//         console.log('File uploaded successfully:', result);
+//         // Access the uploaded file URL using result.secure_url
+//     }
+// });
