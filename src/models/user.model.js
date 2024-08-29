@@ -3,33 +3,47 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
 const UserSchema = new Schema({
-    username: {
+    userName: {
         type: String,
-        required: true,
+        required: [true, 'Username is required'], // Custom error message
         unique: true,
         trim: true,
         lowercase: true,
         index: true,
+        minlength: [3, 'Username must be at least 3 characters long'],
+        maxlength: [10, 'Username cannot exceed 10 characters'], // Correcting 'maxCount' to 'maxlength'
+        validate: {
+            validator: function (v) {
+                return /^[a-zA-Z0-9]+$/.test(v); // Only allow alphanumeric characters
+            },
+            message: props => `${props.value} is not a valid username!`
+        }
     },
     email: {
         type: String,
-        required: true,
+        required: [true, 'Email is required'], // Custom error message
         unique: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        validate: {
+            validator: function (v) {
+                return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(.\w{2,3})+$/.test(v); // Simple email regex
+            },
+            message: props => `${props.value} is not a valid email!`
+        }
     },
     fullName: {
         type: String,
-        required: true,
+        required: [true, 'Full name is required'], // Custom error message
         index: true,
         trim: true,
     },
     avatar: {
-        type: String, // cloudinary url 
-        required: true
+        type: String, // cloudinary URL
+        required: [true, 'Avatar URL is required'] // Custom error message
     },
     coverImage: {
-        type: String, // cloudinary url 
+        type: String, // cloudinary URL
     },
     watchHistory: [
         {
@@ -39,15 +53,19 @@ const UserSchema = new Schema({
     ],
     password: {
         type: String,
-        required: [true, 'Password is required'], // custom error message 
-        minlength: [6, 'Password must be at least 6 characters long']
+        required: [true, 'Password is required'], // Custom error message
+        minlength: [6, 'Password must be at least 6 characters long'],
+        validate: {
+            validator: function (v) {
+                return /(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/.test(v); // Must contain at least one digit, one lowercase, and one uppercase letter
+            },
+            message: props => 'Password must contain at least one number, one lowercase and one uppercase letter'
+        }
     },
     refreshToken: {
         type: String
     }
 }, { timestamps: true });
-
-
 
 UserSchema.pre('save', async function (next) {
     try {
@@ -93,4 +111,6 @@ UserSchema.methods.generateRefreshToken = function () {
     )
 }
 
-export const User = model('User', UserSchema);
+const User = model('User', UserSchema);
+
+export default User;
