@@ -11,7 +11,7 @@ const UserSchema = new Schema({
         lowercase: true,
         index: true,
         minlength: [3, 'Username must be at least 3 characters long'],
-        maxlength: [10, 'Username cannot exceed 10 characters'], // Correcting 'maxCount' to 'maxlength'
+        maxlength: [30, 'Username cannot exceed 10 characters'], // Correcting 'maxCount' to 'maxlength'
         validate: {
             validator: function (v) {
                 return /^[a-zA-Z0-9]+$/.test(v); // Only allow alphanumeric characters

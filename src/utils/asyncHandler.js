@@ -1,23 +1,15 @@
+import { ApiResponse } from "./ApiResponse.js";
+
 const asyncHandler = (requestHandler) => {
     return (req, res, next) => {
-        Promise.resolve(requestHandler(req, res, next)).
-            catch((err) => next(err))
-    }
-}
-
+        Promise.resolve(requestHandler(req, res, next))
+            .catch((err) => {
+                // Use ApiResponse for error
+                const statusCode = err.statusCode || 500;
+                const response = new ApiResponse(statusCode, null, err.message);
+                res.status(statusCode).json(response);
+            });
+    };
+};
 
 export { asyncHandler };
-
-
-/* const asyncHandler = (fn) => async (req, res, next) => {
-    try {
-        await fn(req, res, next);
-    } catch (error) {
-        res.status(error.code || 500).json({
-            success: false,
-            message: error.message
-        });
-    }
-}; */
-
-
