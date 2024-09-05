@@ -110,7 +110,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
-    res.status(200)
+    return res.status(200)
         .cookie('refreshToken', refreshToken, options)
         .cookie('accessToken', accessToken, options)
         .json(new ApiResponse(
@@ -140,7 +140,7 @@ export const logOutUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
-    res.status(200)
+    return res.status(200)
         .clearCookie("refreshToken", options)
         .clearCookie("accessToken", options)
         .json(new ApiResponse(200, {}, "User logged out successfully"));
@@ -169,7 +169,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
             secure: true,
         };
         const { accessToken, refreshToken } = genrateAccessAndRefreshTokens(user?._id);
-        res.status(200)
+        return res.status(200)
             .cookie("refreshToken", refreshToken, option)
             .cookie("accessToken", accessToken, option)
             .json(
@@ -183,4 +183,96 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
         throw new ApiError(error?.message || "invalid refresh token");
     }
 
+});
+
+export const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword?.trim() || !newPassword?.trim()) {
+        throw new ApiError(400, "old password and new password is required");
+    }
+    const user = await User.findById(req.user?._id);
+    const isPasswordCorrect = await user.isPasswordCorrect();
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid Old password ");
+    }
+    user.password = newPassword;
+    await user.save({ validateBeforesave: false });
+
+    return res.status(200)
+        .json(new ApiResponse(200, {}, "password changed successfully"));
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+    if (!req.user) {
+        throw new ApiError(404, "User not found");
+    }
+    return res.status(200).json(new ApiResponse(200, req.user, "Current user fatched successfully"));
+});
+
+export const updateUserDetails = asyncHandler(async (req, res) => {
+    const { fullName, email } = req.body;
+    if (!fullName || !email) {
+        throw new ApiError(400, "All fields are required");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                userName,
+                email
+            }
+        }
+        , { new: true }
+    ).select("-password");
+    return res.status(200)
+        .json(new ApiResponse(200, user, "user updated successfully"));
+
+});
+
+export const updateUserAvatar = asyncHandler(async (req, res) => {
+    const locaFilePtah = req.file?.path;
+    if (!locaFilePtah) {
+        throw new ApiError(400, "Avater file is missing");
+    };
+
+    const avatar = await uploadOnCloudinary(locaFilePtah);
+    if (!avatar.secure_url) {
+        throw new ApiError(400, "Eroor while uploading avatar");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.secure_url
+            }
+        },
+        { new: true }
+    ).select("-password");
+
+    return res.status(200)
+    .json(new ApiResponse(200, user , "Avatar updated successfully"));
+});
+
+export const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const locaFilePtah = req.file?.path;
+    if (!locaFilePtah) {
+        throw new ApiError(400, "coverImage file is missing");
+    };
+
+    const coverImage = await uploadOnCloudinary(locaFilePtah);
+    if (!coverImage.secure_url) {
+        throw new ApiError(400, "Eroor while uploading coverImage");
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                coverImage: coverImage.secure_url
+            }
+        },
+        { new: true }
+    ).select("-password");
+
+    return res.status(200)
+    .json(new ApiResponse(200, user , "coverImage updated successfully"));
 });
