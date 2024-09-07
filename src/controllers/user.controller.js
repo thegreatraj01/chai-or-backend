@@ -5,7 +5,7 @@ import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken';
 import fs from "fs";
-import exp from 'constants';
+import mongoose from 'mongoose';
 
 export const genrateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -336,9 +336,58 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
         }
     ]);
     console.log(channel);
-    if(!channel?.length){
+    if (!channel?.length) {
         throw new Error("Channel does not exist");
     };
     return res.status(200)
-    .json(new ApiResponse(200, channel[0] , "user Channel fetched successfully"));
+        .json(new ApiResponse(200, channel[0], "user Channel fetched successfully"));
 });
+
+export const getUserWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: new mongoose.Types.ObjectId(req.user._id)
+        },
+        {
+            $lookup: {
+                from: 'videos',
+                localField: 'watchHistory',
+                foreignField: '_id',
+                as: 'watchHistory',
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'owner',
+                            foreignField: '_id',
+                            as: 'owner',
+                            pipeline: [ // try to select data in second pipeline dont use a pipeline here 
+                                {
+                                    $project: {
+                                        userName: 1,
+                                        fullName: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owener: {
+                                $first: '$owner'
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]);
+
+    return res.status(200)
+        .json(new ApiResponse(
+            200,
+            user[0].watchHistory,
+            "Watch History fetched successfully"
+        ));
+})
