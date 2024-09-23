@@ -285,7 +285,7 @@ export const updateUserCoverImage = asyncHandler(async (req, res) => {
 
     const coverImage = await uploadOnCloudinary(locaFilePtah);
     if (!coverImage || !coverImage.secure_url) {
-        throw new ApiError(400, "Error while uploading avatar");
+        throw new ApiError(500, "Error while uploading avatar");
     }
     if (!coverImage.secure_url) {
         throw new ApiError(400, "Eroor while uploading coverImage");

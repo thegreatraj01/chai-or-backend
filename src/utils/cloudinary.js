@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { ApiError } from "./apiError.js";
 
+
 // Define folder paths for images and videos
 const imagesFolder = "ChaiOrCode/images";
 const videosFolder = "ChaiOrCode/videos";
@@ -29,12 +30,11 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     try {
         if (!localFilePath) return null;
-
         const folderName = getFolderBasedOnFileType(localFilePath);
 
         if (!folderName) {
             console.log("Unsupported file type.");
-            return null;
+            throw new ApiError(400, "Unsupported file type");
         }
 
         const response = await cloudinary.uploader.upload(localFilePath, {
